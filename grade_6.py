@@ -29,7 +29,7 @@ if not os.path.exists(FONT_PATH):
 pdfmetrics.registerFont(TTFont('Arabic', FONT_PATH))
 
 # 🔧 إعدادات Firebase و Telegram
-PATH_TO_SERVICE_ACCOUNT = "attendance-streamlit-app-c3aa8-firebase-adminsdk-fbsvc-0402cfb215.json"
+PATH_TO_SERVICE_ACCOUNT = "attendance-streamlit-app-c3aa8-firebase-adminsdk-fbsvc-3731ffb00a.json"
 TELEGRAM_BOT_TOKEN = "7517001841:AAFZZQM1hiprXxhPhK4GMfFwu-eP-DkOdMU"
 TELEGRAM_CHAT_ID = "8108209758"
 
@@ -207,3 +207,4 @@ elif page == "👨‍🏫 مدرس":
                 record_absence(s, teacher_name)
             notify_teacher_action(teacher_name, absent_students)
             st.success(f"✅ تم تسجيل غياب {len(absent_students)} طالب وإرسال إشعار لتليجرام.")
+
