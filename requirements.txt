@@ -1,7 +1,0 @@
-﻿streamlit
-firebase-admin
-requests
-pandas
-arabic-reshaper
-python-bidi
-reportlab
