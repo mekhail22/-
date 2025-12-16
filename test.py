@@ -1,357 +1,402 @@
 import streamlit as st
-import pandas as pd
+import time
 from datetime import datetime
-import random
 
 # إعدادات الصفحة
 st.set_page_config(
-    page_title="مدرسة السلام - كريسماس 2024",
-    page_icon="🎄",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="🎄 معايدة كريسماس متحركة",
+    page_icon="🎅",
+    layout="centered"
 )
 
-# تحميل CSS مخصص
+# CSS مخصص + JavaScript للأنيميشن
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
     
-    * {
+    .main-container {
         font-family: 'Cairo', sans-serif;
     }
     
-    .main-header {
+    .christmas-box {
+        background: linear-gradient(145deg, #ffffff, #f0f0f0);
+        border-radius: 25px;
+        padding: 40px;
+        margin: 30px auto;
+        max-width: 800px;
+        box-shadow: 
+            0 20px 60px rgba(220, 53, 69, 0.3),
+            0 0 0 10px #dc3545,
+            0 0 0 15px #ffd700;
+        position: relative;
+        overflow: hidden;
+        border: 5px solid #1a5c48;
         text-align: center;
-        padding: 2rem;
-        background: linear-gradient(135deg, #1a5c48 0%, #0a3d2f 100%);
-        border-radius: 15px;
+        min-height: 400px;
+    }
+    
+    /* زينة الزوايا */
+    .corner {
+        position: absolute;
+        width: 60px;
+        height: 60px;
+        font-size: 40px;
+        opacity: 0.7;
+    }
+    
+    .top-left { top: 10px; left: 10px; }
+    .top-right { top: 10px; right: 10px; }
+    .bottom-left { bottom: 10px; left: 10px; }
+    .bottom-right { bottom: 10px; right: 10px; }
+    
+    /* نص الأنيميشن */
+    .animated-text {
+        font-size: 2.2rem;
+        line-height: 1.8;
+        color: #0a3d2f;
+        margin: 30px 0;
+        min-height: 200px;
+        text-align: center;
+        direction: rtl;
+        padding: 20px;
+    }
+    
+    .cursor {
+        display: inline-block;
+        width: 3px;
+        background-color: #dc3545;
+        animation: blink 1s infinite;
+        margin-right: 5px;
+        height: 2.5rem;
+        vertical-align: middle;
+    }
+    
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+    
+    /* ندفة ثلج */
+    .snowflake {
+        position: absolute;
+        color: #4dabf7;
+        font-size: 24px;
+        opacity: 0;
+        animation: fall linear infinite;
+    }
+    
+    @keyframes fall {
+        to {
+            transform: translateY(100vh) rotate(360deg);
+            opacity: 0;
+        }
+    }
+    
+    /* الأزرار */
+    .stButton > button {
+        background: linear-gradient(45deg, #dc3545, #c82333);
         color: white;
-        margin-bottom: 2rem;
+        border: none;
+        padding: 12px 30px;
+        font-size: 1.2rem;
+        border-radius: 50px;
+        font-family: 'Cairo', sans-serif;
+        transition: all 0.3s;
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(220, 53, 69, 0.6);
+    }
+    
+    /* العنوان */
+    .header-title {
+        text-align: center;
+        color: #dc3545;
+        font-size: 2.8rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
     }
     
     .school-name {
-        font-size: 3rem;
-        color: #ffd700;
-        margin-bottom: 0.5rem;
-    }
-    
-    .department {
-        font-size: 2rem;
-        color: #fff;
-    }
-    
-    .christmas-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin: 1rem 0;
-        border-right: 5px solid #dc3545;
-    }
-    
-    .student-card {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        padding: 1rem;
-        border-radius: 10px;
-        margin: 0.5rem 0;
-        border-right: 4px solid #28a745;
-    }
-    
-    .countdown-box {
-        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-        color: white;
-        padding: 1.5rem;
-        border-radius: 15px;
         text-align: center;
-        margin: 1rem 0;
+        color: #1a5c48;
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin-bottom: 30px;
     }
     
-    .gallery-item {
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-        transition: transform 0.3s;
+    /* تأثيرات إضافية */
+    .sparkle {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: gold;
+        border-radius: 50%;
+        animation: sparkle 2s infinite;
     }
     
-    .gallery-item:hover {
-        transform: translateY(-5px);
+    @keyframes sparkle {
+        0%, 100% { transform: scale(1); opacity: 0.7; }
+        50% { transform: scale(1.5); opacity: 1; }
     }
 </style>
-""", unsafe_allow_html=True)
 
-# بيانات المدرسة
-school_data = {
-    "name": "مدرسة السلام الإعدادية الثانوية",
-    "department": "قسم ابتدائي",
-    "principal": "أ/ محمد أحمد",
-    "address": "شارع النصر، منطقة السلام",
-    "phone": "01234567890",
-    "email": "info@alsalam-school.edu.eg",
-    "students_count": 450,
-    "teachers_count": 25
+<script>
+// دالة لإنشاء ندف الثلج
+function createSnowflakes() {
+    const container = document.querySelector('.christmas-box');
+    for (let i = 0; i < 15; i++) {
+        const snowflake = document.createElement('div');
+        snowflake.classList.add('snowflake');
+        snowflake.innerHTML = '❄';
+        snowflake.style.left = Math.random() * 100 + '%';
+        snowflake.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        snowflake.style.animationDelay = Math.random() * 5 + 's';
+        container.appendChild(snowflake);
+    }
 }
 
-# بيانات الطلاب والأعمال
-students_artworks = [
-    {"name": "يوسف أحمد", "grade": "الصف الأول", "artwork": "رسم شجرة كريسماس", "color": "🎨"},
-    {"name": "مريم خالد", "grade": "الصف الثاني", "artwork": "بطاقة معايدة", "color": "✉️"},
-    {"name": "عمر سعيد", "grade": "الصف الثالث", "artwork": "مجسم نجمة", "color": "⭐"},
-    {"name": "سارة محمود", "grade": "الصف الرابع", "artwork": "زينة ورقية", "color": "🎀"},
-    {"name": "خالد وائل", "grade": "الصف الخامس", "artwork": "رسم العائلة", "color": "👨‍👩‍👧‍👦"},
-    {"name": "فاطمة حسن", "grade": "الصف السادس", "artwork": "كروت معايدة", "color": "🎁"}
-]
+// دالة لإنشاء الومضات الذهبية
+function createSparkles() {
+    const container = document.querySelector('.christmas-box');
+    for (let i = 0; i < 10; i++) {
+        const sparkle = document.createElement('div');
+        sparkle.classList.add('sparkle');
+        sparkle.style.left = Math.random() * 100 + '%';
+        sparkle.style.top = Math.random() * 100 + '%';
+        sparkle.style.animationDelay = Math.random() * 2 + 's';
+        container.appendChild(sparkle);
+    }
+}
 
-# بيانات الفعاليات
-events = [
-    {"date": "2024-12-20", "title": "معرض الفنون", "time": "10:00 ص"},
-    {"date": "2024-12-22", "title": "حفل توزيع الهدايا", "time": "11:00 ص"},
-    {"date": "2024-12-23", "title": "ورشة عمل الزينة", "time": "9:00 ص"},
-    {"date": "2024-12-24", "title": "الحفل الختامي", "time": "12:00 م"}
-]
-
-# الواجهة الرئيسية
-def main():
-    # شريط جانبي
-    with st.sidebar:
-        st.image("https://cdn-icons-png.flaticon.com/512/197/197558.png", width=100)
-        st.title("القائمة الرئيسية")
-        
-        menu = st.radio(
-            "اختر قسم:",
-            ["🏠 الصفحة الرئيسية", "🎨 معرض الأعمال", "📅 الفعاليات", "👥 عن المدرسة", "✉️ معايدة خاصة"]
-        )
-        
-        st.markdown("---")
-        st.markdown("### عدّاد الكريسماس")
-        christmas_date = datetime(2024, 12, 25)
-        current_date = datetime.now()
-        days_left = (christmas_date - current_date).days
-        st.markdown(f"""
-        <div class='countdown-box'>
-            <h3>🎄 {days_left} يوم</h3>
-            <p>متبقي على عيد الميلاد</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        st.info("🎅 كل عام وأنتم بخير بمناسبة الكريسماس!")
+// دالة الأنيميشن النصية
+function typeWriter(text, elementId, speed = 50) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
     
-    # المحتوى الرئيسي
-    if menu == "🏠 الصفحة الرئيسية":
-        show_homepage()
-    elif menu == "🎨 معرض الأعمال":
-        show_gallery()
-    elif menu == "📅 الفعاليات":
-        show_events()
-    elif menu == "👥 عن المدرسة":
-        show_about()
-    elif menu == "✉️ معايدة خاصة":
-        show_greeting_card()
+    element.innerHTML = '';
+    let i = 0;
+    
+    function type() {
+        if (i < text.length) {
+            // إضافة حرف مع تأثير
+            const char = text.charAt(i);
+            const span = document.createElement('span');
+            span.textContent = char;
+            
+            // تأثير للأحرف الجديدة
+            span.style.opacity = '0';
+            span.style.transform = 'translateY(10px)';
+            span.style.display = 'inline-block';
+            span.style.transition = 'all 0.1s';
+            
+            element.appendChild(span);
+            
+            // تأثير ظهور الحرف
+            setTimeout(() => {
+                span.style.opacity = '1';
+                span.style.transform = 'translateY(0)';
+            }, 10);
+            
+            i++;
+            setTimeout(type, speed);
+        } else {
+            // إضافة المؤشر الوامض بعد الانتهاء
+            const cursor = document.createElement('span');
+            cursor.classList.add('cursor');
+            element.appendChild(cursor);
+        }
+    }
+    
+    // بدء الأنيميشن بعد فترة قصيرة
+    setTimeout(type, 500);
+}
 
-def show_homepage():
-    # الهيدر الرئيسي
+// بدء التأثيرات عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    createSnowflakes();
+    createSparkles();
+    
+    // البدء في كتابة الرسالة الأولى تلقائياً
+    setTimeout(() => {
+        typeWriter(
+            "كل عام وأنتم بخير بمناسبة عيد الميلاد المجيد 🎄",
+            "animatedMessage",
+            60
+        );
+    }, 1000);
+});
+
+// دالة لإعادة التشغيل
+function restartAnimation() {
+    const element = document.getElementById('animatedMessage');
+    if (element) {
+        // إخفاء النص القديم
+        element.style.opacity = '0';
+        
+        // البدء من جديد بعد فترة قصيرة
+        setTimeout(() => {
+            element.style.opacity = '1';
+            const texts = [
+                "كل عام وأنتم بخير بمناسبة عيد الميلاد المجيد 🎄",
+                "نتمنى لكم سنة جديدة مليئة بالفرح والسلام ❤️",
+                "من طلاب ومعلمي مدرسة السلام الإعدادية 🏫",
+                "عيد ميلاد سعيد ومبارك للجميع ✨",
+                "🎅🎄🎁 بركة العيد تعم على الجميع 🎁🎄🎅"
+            ];
+            const randomText = texts[Math.floor(Math.random() * texts.length)];
+            typeWriter(randomText, "animatedMessage", 60);
+        }, 300);
+    }
+}
+</script>
+""", unsafe_allow_html=True)
+
+# HTML للصندوق والأنيميشن
+st.markdown("""
+<div class="main-container">
+    <h1 class="header-title">🎄 معايدة كريسماس 🎄</h1>
+    <div class="school-name">مدرسة السلام الإعدادية الثانوية - قسم ابتدائي</div>
+    
+    <div class="christmas-box">
+        <!-- زينة الزوايا -->
+        <div class="corner top-left">🎄</div>
+        <div class="corner top-right">⭐</div>
+        <div class="corner bottom-left">🎁</div>
+        <div class="corner bottom-right">🔔</div>
+        
+        <!-- الرسالة المتحركة -->
+        <div id="animatedMessage" class="animated-text"></div>
+        
+        <!-- نص تهنئة ثابت -->
+        <div style="margin-top: 20px; padding: 20px; background: rgba(26, 92, 72, 0.1); border-radius: 15px;">
+            <p style="font-size: 1.3rem; color: #0a3d2f; margin-bottom: 10px;">
+                <strong>🎅 رسالة خاصة:</strong>
+            </p>
+            <p style="font-size: 1.1rem; color: #555; line-height: 1.6;">
+                يسرنا أن نتقدم بأحر التهاني والتبريكات بمناسبة عيد الميلاد المجيد، 
+                متمنين لجميع الطلاب وأولياء الأمور والمعلمين سنة جديدة مليئة بالفرح 
+                والبركة والسلام. كل عام وأنتم بخير.
+            </p>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# أزرار التحكم
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    if st.button("🔄 إعادة تشغيل الأنيميشن"):
+        st.markdown("""
+        <script>
+            restartAnimation();
+        </script>
+        """, unsafe_allow_html=True)
+        st.success("تم إعادة تشغيل الأنيميشن!")
+
+with col2:
+    if st.button("🎵 تشغيل الموسيقى"):
+        # إضافة موسيقى خلفية
+        st.markdown("""
+        <audio autoplay loop>
+            <source src="https://assets.mixkit.co/music/preview/mixkit-jingle-bells-311.mp3" type="audio/mpeg">
+        </audio>
+        <script>
+            document.querySelector('audio').volume = 0.3;
+        </script>
+        """, unsafe_allow_html=True)
+        st.info("🎶 تشغيل موسيقى الكريسماس...")
+
+with col3:
+    if st.button("📤 مشاركة المعايدة"):
+        st.markdown("""
+        <script>
+            // محاكاة نسخ الرسالة
+            const message = "🎄 معايدة كريسماس من مدرسة السلام 🎄\\nكل عام وأنتم بخير!\\nwww.alsalam-school.edu.eg";
+            navigator.clipboard.writeText(message);
+            alert('تم نسخ المعايدة! يمكنك مشاركتها الآن.');
+        </script>
+        """, unsafe_allow_html=True)
+        st.success("تم نسخ المعايدة للحافظة!")
+
+# قسم إضافي للتهاني المخصصة
+st.markdown("---")
+st.subheader("✍️ اكتب معايدتك المخصصة")
+
+user_message = st.text_area(
+    "اكتب رسالة التهنئة:",
+    "كل عام وأنتم بخير بمناسبة الكريسماس! 🎄",
+    height=100
+)
+
+if st.button("✨ عرض معايدتي"):
     st.markdown(f"""
-    <div class='main-header'>
-        <h1 class='school-name'>{school_data['name']}</h1>
-        <h2 class='department'>{school_data['department']}</h2>
-        <h3>🎄 كل عام وأنتم بخير بمناسبة الكريسماس 🎄</h3>
+    <div style="background: linear-gradient(45deg, #ffd700, #ffed4e); 
+                padding: 25px; border-radius: 15px; margin: 20px 0; 
+                border: 3px solid #dc3545;">
+        <h3 style="color: #0a3d2f; text-align: center;">معايدتك الشخصية ✨</h3>
+        <p style="font-size: 1.4rem; text-align: center; color: #333; 
+                   padding: 15px; direction: rtl;">
+            {user_message}
+        </p>
+        <p style="text-align: left; color: #666; font-size: 0.9rem;">
+            من: مدرسة السلام الإعدادية الثانوية
+        </p>
     </div>
     """, unsafe_allow_html=True)
-    
-    # أقسام رئيسية
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.markdown("""
-        <div class='christmas-card'>
-            <h3>🎁 رسالة المدير</h3>
-            <p>يسعدني أن أتقدم بأحر التهاني بمناسبة عيد الميلاد المجيد، 
-            متمنياً لجميع الطلاب وأولياء الأمور عاماً مليئاً بالفرح والسلام.</p>
-            <p><strong>مدير المدرسة</strong><br>{}</p>
-        </div>
-        """.format(school_data['principal']), unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div class='christmas-card'>
-            <h3>✨ فعالياتنا</h3>
-            <p>ننظم هذا الأسبوع العديد من الفعاليات والأنشطة الخاصة بالكريسماس، 
-            بما في ذلك ورش عمل فنية ومعارض وحفل توزيع الهدايا.</p>
-            <p>🎨 معرض الفنون<br>🎭 الحفل الختامي<br>🎁 توزيع الهدايا</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown("""
-        <div class='christmas-card'>
-            <h3>🏆 إنجازات الطلاب</h3>
-            <p>طلابنا المبدعون قدموا أعمالاً رائعة تعبر عن روح الكريسماس 
-            وقيم المحبة والسلام التي نحرص على غرسها فيهم.</p>
-            <p>👦 450 طالب وطالبة<br>🎨 120 عمل فني<br>⭐ 25 جائزة تقديرية</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # قسم أعمال الطلاب
-    st.markdown("## 🎨 إبداعات طلابنا")
-    
-    for student in students_artworks[:3]:
-        with st.container():
-            st.markdown(f"""
-            <div class='student-card'>
-                <h4>{student['color']} {student['name']} - {student['grade']}</h4>
-                <p><strong>العمل الفني:</strong> {student['artwork']}</p>
-            </div>
-            """, unsafe_allow_html=True)
 
-def show_gallery():
-    st.title("🎨 معرض الأعمال الفنية")
+# معلومات المدرسة
+with st.expander("🏫 معلومات المدرسة"):
+    st.markdown("""
+    ### مدرسة السلام الإعدادية الثانوية
+    **القسم:** الابتدائي  
+    **العنوان:** شارع النصر، منطقة السلام  
+    **الهاتف:** 01234567890  
+    **البريد الإلكتروني:** info@alsalam-school.edu.eg  
     
-    # فلترة حسب الصف
-    grades = ["جميع الصفوف"] + list(set([s["grade"] for s in students_artworks]))
-    selected_grade = st.selectbox("اختر الصف:", grades)
+    ---
     
-    # عرض الأعمال
-    cols = st.columns(2)
-    
-    filtered_artworks = students_artworks
-    if selected_grade != "جميع الصفوف":
-        filtered_artworks = [s for s in students_artworks if s["grade"] == selected_grade]
-    
-    for idx, student in enumerate(filtered_artworks):
-        with cols[idx % 2]:
-            st.markdown(f"""
-            <div class='gallery-item'>
-                <div style='background: linear-gradient(135deg, #ff6b6b 0%, #4CAF50 100%); 
-                padding: 2rem; text-align: center; color: white;'>
-                    <h1 style='font-size: 4rem;'>{student['color']}</h1>
-                </div>
-                <div style='padding: 1rem; background: white;'>
-                    <h4>{student['name']}</h4>
-                    <p><strong>الصف:</strong> {student['grade']}</p>
-                    <p><strong>العمل:</strong> {student['artwork']}</p>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+    ### 🎄 فعاليات الكريسماس
+    1. معرض الأعمال الفنية: 20 ديسمبر
+    2. حفل توزيع الهدايا: 22 ديسمبر
+    3. ورشة صناعة الزينة: 23 ديسمبر
+    4. الحفل الختامي: 24 ديسمبر
+    """)
 
-def show_events():
-    st.title("📅 فعاليات الكريسماس")
+# JavaScript إضافي لتأثيرات تفاعلية
+st.markdown("""
+<script>
+// إضافة تأثير عند النقر على الصندوق
+document.querySelector('.christmas-box').addEventListener('click', function() {
+    this.style.transform = 'scale(0.98)';
+    setTimeout(() => {
+        this.style.transform = 'scale(1)';
+    }, 150);
     
-    # تقويم الفعاليات
-    for event in events:
-        with st.container():
-            col1, col2, col3 = st.columns([1, 3, 1])
-            with col1:
-                st.markdown(f"### 📅")
-                st.write(event["date"].split("-")[2])
-            with col2:
-                st.markdown(f"#### {event['title']}")
-                st.write(f"⏰ {event['time']}")
-            with col3:
-                if st.button("تسجيل", key=event["title"]):
-                    st.success(f"تم تسجيلك في {event['title']}")
+    // إضافة قلب عند النقر
+    const heart = document.createElement('div');
+    heart.innerHTML = '❤️';
+    heart.style.position = 'absolute';
+    heart.style.fontSize = '30px';
+    heart.style.left = (Math.random() * 80 + 10) + '%';
+    heart.style.top = (Math.random() * 80 + 10) + '%';
+    heart.style.animation = 'floatUp 2s ease-out forwards';
+    this.appendChild(heart);
     
-    # نموذج تسجيل لفعالية جديدة
-    st.markdown("---")
-    st.subheader("🎯 سجل في فعالية جديدة")
-    
-    with st.form("event_registration"):
-        col1, col2 = st.columns(2)
-        with col1:
-            student_name = st.text_input("اسم الطالب")
-            grade = st.selectbox("الصف", ["الصف الأول", "الصف الثاني", "الصف الثالث", 
-                                         "الصف الرابع", "الصف الخامس", "الصف السادس"])
-        with col2:
-            parent_name = st.text_input("اسم ولي الأمر")
-            phone = st.text_input("رقم الهاتف")
-        
-        selected_event = st.selectbox("الفعالية", [e["title"] for e in events])
-        
-        if st.form_submit_button("تسجيل"):
-            st.success(f"تم تسجيل {student_name} في {selected_event} بنجاح!")
+    setTimeout(() => heart.remove(), 2000);
+});
 
-def show_about():
-    st.title("🏫 عن مدرسة السلام")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown(f"""
-        <div style='background: white; padding: 2rem; border-radius: 15px; color: #333;'>
-            <h3>معلومات المدرسة</h3>
-            <p><strong>👨‍🏫 المدير:</strong> {school_data['principal']}</p>
-            <p><strong>🏠 العنوان:</strong> {school_data['address']}</p>
-            <p><strong>📞 الهاتف:</strong> {school_data['phone']}</p>
-            <p><strong>✉️ الإيميل:</strong> {school_data['email']}</p>
-            <p><strong>👥 عدد الطلاب:</strong> {school_data['students_count']}</p>
-            <p><strong>👩‍🏫 عدد المعلمين:</strong> {school_data['teachers_count']}</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div style='background: linear-gradient(135deg, #1a5c48 0%, #0a3d2f 100%); 
-        padding: 2rem; border-radius: 15px; color: white;'>
-            <h3>🎯 رؤيتنا</h3>
-            <p>نطمح إلى تربية جيل مبدع يحمل قيم السلام والمحبة والتسامح، 
-            ويساهم في بناء مجتمع أفضل.</p>
-            <h3>🎄 رسالة الكريسماس</h3>
-            <p>نؤمن بأن الأعياد فرصة لنشر المحبة والفرح بين جميع أفراد المجتمع، 
-            بغض النظر عن الديانة أو الخلفية.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-def show_greeting_card():
-    st.title("✉️ صمم بطاقة معايدتك")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        name = st.text_input("اسم المرسل")
-        to_name = st.text_input("اسم المستقبل")
-        message = st.text_area("رسالتك", "كل عام وأنتم بخير بمناسبة الكريسماس!")
-        
-        card_style = st.selectbox("تصميم البطاقة", 
-                                 ["كلاسيكي 🎄", "حديث ⭐", "ملون 🌈"])
-        
-        colors = {
-            "كلاسيكي 🎄": ["#1a5c48", "#dc3545"],
-            "حديث ⭐": ["#0a3d2f", "#ffd700"],
-            "ملون 🌈": ["#ff6b6b", "#4CAF50"]
-        }
-    
-    with col2:
-        if name and to_name:
-            selected_colors = colors[card_style]
-            st.markdown(f"""
-            <div style='background: linear-gradient(135deg, {selected_colors[0]} 0%, {selected_colors[1]} 100%);
-            padding: 3rem; border-radius: 20px; color: white; text-align: center;'>
-                <h2>🎄 بطاقة معايدة 🎄</h2>
-                <h3>إلى: {to_name}</h3>
-                <p style='font-size: 1.2rem; margin: 2rem 0;'>{message}</p>
-                <h4>من: {name}</h4>
-                <p style='margin-top: 2rem;'>مدرسة السلام الإعدادية الثانوية<br>قسم ابتدائي</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            if st.button("📥 حفظ البطاقة"):
-                st.success("تم حفظ البطاقة بنجاح!")
-                st.download_button(
-                    label="📄 تحميل البطاقة",
-                    data=f"""
-                    بطاقة معايدة كريسماس
-                    ===================
-                    إلى: {to_name}
-                    
-                    {message}
-                    
-                    من: {name}
-                    
-                    مدرسة السلام الإعدادية الثانوية
-                    قسم ابتدائي
-                    """,
-                    file_name="christmas_card.txt",
-                    mime="text/plain"
-                )
-
-if __name__ == "__main__":
-    main()
+// تأثير الطفو للقلوب
+const style = document.createElement('style');
+style.textContent = `
+@keyframes floatUp {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-100px) scale(0.5); opacity: 0; }
+}
+`;
+document.head.appendChild(style);
+</script>
+""", unsafe_allow_html=True)
